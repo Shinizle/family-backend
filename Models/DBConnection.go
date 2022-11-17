@@ -8,11 +8,16 @@ import (
 var DB *gorm.DB
 
 func ConnectDatabase() {
-	db, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/go_rest_api_crud?charset=utf8mb4&parseTime=True&loc=Local"))
+	db, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/family_db?charset=utf8mb4&parseTime=True&loc=Local"))
 	if err != nil {
 		panic(err)
 	}
 
-	db.AutoMigrate(&Product{})
+	db.AutoMigrate(
+		&Customer{},
+		&Nationality{},
+		&FamilyList{},
+	)
+
 	DB = db
 }
