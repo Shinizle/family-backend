@@ -10,5 +10,4 @@ type FamilyList struct {
 	Relation   string    `gorm: "type:varchar(255); not null;" json:"relation"`
 	CreatedAt  time.Time `gorm: "type:date" json:"created_at" sql:"DEFAULT:CURRENT_TIMESTAMP"`
 	UpdatedAt  time.Time `gorm: "type:date" json:"updated_at" sql:"DEFAULT:CURRENT_TIMESTAMP"`
-	Customer   Customer  `gorm: "foreignKey:CustomerID"`
 }

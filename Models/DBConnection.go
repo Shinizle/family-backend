@@ -14,8 +14,8 @@ func ConnectDatabase() {
 	}
 
 	db.AutoMigrate(
-		&Customer{},
 		&Nationality{},
+		&Customer{},
 		&FamilyList{},
 	)
 
