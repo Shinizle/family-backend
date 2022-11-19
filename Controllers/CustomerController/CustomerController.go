@@ -105,21 +105,22 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	input := map[string]string{"id": ""}
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&input); err != nil {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
 		ResponseError(w, http.StatusBadRequest, err.Error())
-		return
 	}
 
-	defer r.Body.Close()
-
 	var customers Models.Customer
-	if Models.DB.Delete(&customers, input["id"]).RowsAffected == 0 {
+	tx := Models.DB.Begin()
+	tx.Delete(Models.FamilyList{}, "customer_id = ?", id)
+	if tx.Delete(&customers, id).RowsAffected == 0 {
+		tx.Rollback()
 		ResponseError(w, http.StatusBadRequest, "Tidak dapat menghapus data")
 		return
 	}
+
+	tx.Commit()
 
 	response := map[string]string{"message": "Data berhasil dihapus"}
 	ResponseJson(w, http.StatusOK, response)

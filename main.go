@@ -4,6 +4,7 @@ import (
 	"github.com/Shinizle/family-backend/Models"
 	"github.com/Shinizle/family-backend/Routers/Api"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"net/http"
 	"strings"
 )
@@ -12,9 +13,11 @@ func main() {
 	Models.ConnectDatabase()
 	router := mux.NewRouter()
 
-	mount(router, "/customer", Api.CustomerRoute())
+	mount(router, "/api/customer", Api.CustomerRoute())
 
-	http.ListenAndServe(":8080", router)
+	// Use default options
+	handler := cors.Default().Handler(router)
+	http.ListenAndServe(":8080", handler)
 }
 
 func mount(r *mux.Router, path string, handler http.Handler) {
