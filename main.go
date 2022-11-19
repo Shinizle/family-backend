@@ -14,6 +14,7 @@ func main() {
 	router := mux.NewRouter()
 
 	mount(router, "/api/customer", Api.CustomerRoute())
+	mount(router, "/api/nationality", Api.NationalityRoute())
 
 	// Use default options
 	handler := cors.Default().Handler(router)

@@ -1,10 +1,9 @@
-package CustomerController
+package NationalityController
 
 import (
 	"encoding/json"
 	"github.com/Shinizle/family-backend/Helpers"
 	"github.com/Shinizle/family-backend/Models"
-	"github.com/Shinizle/family-backend/Models/Structs"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 	"net/http"
@@ -14,19 +13,15 @@ import (
 var ResponseJson = Helpers.ResponseJson
 var ResponseError = Helpers.ResponseError
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
-
 func Index(w http.ResponseWriter, r *http.Request) {
-	var customers []Models.Customer
+	var nationalities []Models.Nationality
 
-	if err := Models.DB.Find(&customers).Error; err != nil {
+	if err := Models.DB.Find(&nationalities).Error; err != nil {
 		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	ResponseJson(w, http.StatusOK, customers)
+	ResponseJson(w, http.StatusOK, nationalities)
 }
 
 func Show(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +31,8 @@ func Show(w http.ResponseWriter, r *http.Request) {
 		ResponseError(w, http.StatusBadRequest, err.Error())
 	}
 
-	var customers Models.Customer
-	if err := Models.DB.Preload("FamilyList").Find(&customers).First(&customers, id).Error; err != nil {
+	var nationalities Models.Nationality
+	if err := Models.DB.Preload("FamilyList").Find(&nationalities).First(&nationalities, id).Error; err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
 			ResponseError(w, http.StatusNotFound, "Data tidak ditemukan.")
@@ -48,14 +43,14 @@ func Show(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ResponseJson(w, http.StatusOK, customers)
+	ResponseJson(w, http.StatusOK, nationalities)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
-	var customers Models.Customer
+	var nationalities Models.Nationality
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&customers); err != nil {
+	if err := decoder.Decode(&nationalities); err != nil {
 		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -63,14 +58,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	tx := Models.DB.Begin()
-	if err := tx.Create(&customers).Error; err != nil {
+	if err := tx.Create(&nationalities).Error; err != nil {
 		ResponseError(w, http.StatusInternalServerError, err.Error())
 		tx.Rollback()
 		return
 	}
 
 	tx.Commit()
-	ResponseJson(w, http.StatusCreated, customers)
+	ResponseJson(w, http.StatusCreated, nationalities)
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {
@@ -80,10 +75,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		ResponseError(w, http.StatusBadRequest, err.Error())
 	}
 
-	var model Structs.UpdateCustomerRequestStruct
+	var nationalities Models.Nationality
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&model); err != nil {
+	if err := decoder.Decode(&nationalities); err != nil {
 		ResponseError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -91,16 +86,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	tx := Models.DB.Begin()
-	if tx.Where("id = ?", id).Updates(&model.Customer).RowsAffected >= 1 {
-		var newFamilies = model.FamilyList
-		tx.Delete(Models.FamilyList{}, "customer_id = ?", id)
-		tx.Create(&newFamilies)
+	if tx.Where("id = ?", id).Updates(&nationalities).RowsAffected >= 1 {
+		nationalities.Id = id
 
-		model.Customer.Id = id
 		tx.Commit()
-
-		Models.DB.Preload("FamilyList").Find(&model.Customer)
-		ResponseJson(w, http.StatusOK, model.Customer)
+		ResponseJson(w, http.StatusOK, nationalities)
 	} else {
 		tx.Rollback()
 		ResponseError(w, http.StatusBadRequest, "Tidak dapat mengupdate data")
@@ -109,17 +99,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
 		ResponseError(w, http.StatusBadRequest, err.Error())
 	}
 
-	var customers Models.Customer
+	var nationalities Models.Nationality
 	tx := Models.DB.Begin()
-	tx.Delete(Models.FamilyList{}, "customer_id = ?", id)
-	if tx.Delete(&customers, id).RowsAffected == 0 {
+	if tx.Delete(&nationalities, id).RowsAffected == 0 {
 		tx.Rollback()
 		ResponseError(w, http.StatusBadRequest, "Tidak dapat menghapus data")
 		return
